@@ -11,7 +11,7 @@ and loads them in memory to querying using SQL.
 
 ```
 $ lsql --help
-usage: lsql [-h] [-d DIRECTORY] [-r] [-v] [--version] [files [files ...]]
+usage: lsql [-h] [-d DIRECTORY] [-r] [-v] [-q] [--version] [files [files ...]]
 
 Querying local files using SQL.
 
@@ -24,6 +24,7 @@ optional arguments:
                         Search files in this directory.
   -r, --recursive       Search files in the directory and subdirectories.
   -v, --verbose         Verbose mode.
+  -q, --quiet           Quiet mode.
   --version, -V         show program's version number and exit
 ```
 
@@ -36,7 +37,7 @@ examples/lines.json: lines_json
 examples/excel.xlsx: excel_xlsx
 examples/csv.csv: csv_csv
 
-sql> select * from excel_xlsx
+lsql> select * from excel_xlsx
    id   b   c
 0   1   6  11
 1   2   7  12
@@ -44,7 +45,7 @@ sql> select * from excel_xlsx
 3   4   9  14
 4   5  10  15
 
-sql> SELECT * FROM excel_xlsx e LEFT JOIN one_json j ON e.id = j.id
+lsql> SELECT * FROM excel_xlsx e LEFT JOIN one_json j ON e.id = j.id
    id   b   c   id    b    c    d
 0   1   6  11  1.0  4.0  NaN  NaN
 1   2   7  12  2.0  NaN  5.0  NaN
