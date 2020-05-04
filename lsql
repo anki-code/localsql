@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from localsql import LocalSQL
+
+if __name__ == '__main__':
+    try:
+        LocalSQL().main()
+    except EOFError:
+        sys.exit(0)
