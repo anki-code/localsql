@@ -11,7 +11,7 @@ and loads them in memory to querying using SQL.
 
 ```
 $ lsql --help
-usage: lsql [-h] [-d DIRECTORY] [-r] [-v] [-q] [--version] [files [files ...]]
+usage: lsql [-h] [-d DIRECTORY] [-r] [-q QUERY] [-v] [-s] [--version] [files [files ...]]
 
 Querying local files using SQL.
 
@@ -23,12 +23,16 @@ optional arguments:
   -d DIRECTORY, --directory DIRECTORY
                         Search files in this directory.
   -r, --recursive       Search files in the directory and subdirectories.
+  -q QUERY, --query QUERY
+                        Run SQL query and return result.
   -v, --verbose         Verbose mode.
-  -q, --quiet           Quiet mode.
+  -s, --silent          Silent mode.
   --version, -V         show program's version number and exit
+
 ```
 
 ## Example
+### Interactive
 ```bash
 $ cd ~ && git clone https://github.com/localsql/localsql && cd localsql 
 $ lsql -r
@@ -52,6 +56,14 @@ lsql> SELECT * FROM excel_xlsx e LEFT JOIN one_json j ON e.id = j.id
 2   3   8  13  3.0  NaN  NaN  6.0
 3   4   9  14  NaN  NaN  NaN  NaN
 4   5  10  15  NaN  NaN  NaN  NaN
+```
+### Not interactive
+```bash
+$ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC NULLS LAST" -s                                                                                    
+     c  cnt
+0  5.0    1
+1  NaN    2
+
 ```
 
 ## SQL syntax
