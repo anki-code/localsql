@@ -9,7 +9,7 @@ from prompt_toolkit import PromptSession, print_formatted_text, HTML
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 def get_ext(f):
     return str(f).split('.')[-1]
@@ -21,6 +21,7 @@ class LocalSQL():
         self.tables = {}
         self.verbose = False
         self.silent = False
+        self.latest_result = None
 
         pd.set_option('display.max_columns', 1000)
         pd.set_option('display.max_rows', 1000)
@@ -69,7 +70,7 @@ class LocalSQL():
 
     def tablename_from_file(self, file):
         file_name = file.name
-        table_name = re.sub('[:*?<>|"\'.{}\[\]\(\) ]', '_', file_name)
+        table_name = re.sub('[:*?\-<>|"\'.{}\[\]\(\) ]', '_', file_name)
         table_name = re.sub('[_]+', '_', table_name)
         if table_name[0].isdigit():
             table_name = 't' + table_name
@@ -79,6 +80,26 @@ class LocalSQL():
         query = query.strip()
         try:
             if query == '':
+                return None
+
+            if query.startswith('\\s'):
+                if self.latest_result is not None:
+                    filename = query.split(' ')[-1]
+                    ext = get_ext(filename)
+                    if ext == 'csv':
+                        self.latest_result.to_csv(filename)
+                    elif ext == 'json':
+                        self.latest_result.to_json(filename, orient='records', lines=True)
+                    elif ext == 'xlsx':
+                        self.latest_result.to_excel(filename)
+                    else:
+                        self.eprint(HTML(f'<ansired>Format {ext} is not supported yet</ansired>'))
+                        return None
+                    self.eprint(HTML(f'<green>Result saved to {filename}</green>'))
+                else:
+                    self.eprint(HTML(f'<yellow>Result not found. Run the query before save</yellow>'))
+                    return None
+
                 return None
 
             if query == '\\t':
@@ -99,6 +120,8 @@ class LocalSQL():
                 return None
 
             result = sqldf(query, self.tables)
+            if result is not None:
+                self.latest_result = result
             return result
 
         except Exception as e:
@@ -163,6 +186,14 @@ class LocalSQL():
         else:
             table_names = list(self.tables.keys())
             completions = table_names
+            for n, d in self.tables.items():
+                for c in d.columns:
+                    col = c
+                    if ' ' in col:
+                        col = f'"{col}"'
+                    if col not in completions:
+                        completions.append(col)
+
             html_completer = WordCompleter(completions)
             session = PromptSession(history=FileHistory(self.history_file))
             while 1:
