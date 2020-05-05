@@ -13,9 +13,6 @@ from pygments.lexers.sql import SqlLexer
 
 __version__ = '0.1.3'
 
-def get_ext(f):
-    return str(f).split('.')[-1]
-
 class LocalSQL():
     def __init__(self):
         self.extensions = ['csv', 'xlsx', 'json']
@@ -55,18 +52,22 @@ class LocalSQL():
         exit(return_code)
 
     def df_from_file(self, file):
-        ext = get_ext(str(file))
-        if ext not in self.extensions:
-            return None
+        fstr = str(file)
 
-        if ext == 'csv':
+        # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+        for compressor in ['.gz', '.bz2', '.zip', '.xz']:
+            if fstr.endswith(compressor):
+                fstr = fstr[:-len(compressor)]
+                break
+
+        if fstr.endswith('.csv'):
             return pd.read_csv(file)
-        elif ext == 'json':
+        elif fstr.endswith('.json'):
             try:
                 return pd.read_json(file)
             except:
                 return pd.read_json(file, lines=True)
-        elif ext == 'xlsx':
+        elif fstr.endswith('.xlsx'):
             return pd.read_excel(file, engine="openpyxl")
 
         return None
@@ -88,15 +89,14 @@ class LocalSQL():
             if query.startswith('\\s'):
                 if self.latest_result is not None:
                     filename = query.split(' ')[-1]
-                    ext = get_ext(filename)
-                    if ext == 'csv':
+                    if filename.endswith('.csv'):
                         self.latest_result.to_csv(filename)
-                    elif ext == 'json':
+                    elif filename.endswith('.json'):
                         self.latest_result.to_json(filename, orient='records', lines=True)
-                    elif ext == 'xlsx':
+                    elif filename.endswith('.xlsx'):
                         self.latest_result.to_excel(filename)
                     else:
-                        self.eprint(HTML(f'<ansired>Format {ext} is not supported yet</ansired>'))
+                        self.eprint(HTML(f'<ansired>Unsupported saving format</ansired>'))
                         return None
                     self.eprint(HTML(f'<green>Result saved to {filename}</green>'))
                 else:
