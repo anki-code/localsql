@@ -80,42 +80,61 @@ class LocalSQL():
             table_name = 't' + table_name
         return table_name
 
+    def special(self, query):
+        query_args = query.split(' ')
+        function_name = query_args[0]
+        function = 'special_' + function_name
+
+        if not hasattr(self, function):
+            print(f'Unrecognized special command: {function_name}\n')
+            print(f'Commands:\n'
+                  f'  \\t   List of tables.\n'
+                  f'  \\td  Detailed list of tables.\n'
+                  f'  \\s   Save last not empty results to file.\n')
+            return None
+
+        getattr(self, function)(query_args[1:])
+
+    def special_s(self, args):
+        if len(args) != 1:
+            self.eprint('Save result to file.\n'
+                        'Usage: \s <filename>.<csv/json/xlsx>')
+            return None
+
+        if self.latest_result is not None:
+            filename = args[0]
+            if filename.endswith('.csv'):
+                self.latest_result.to_csv(filename)
+            elif filename.endswith('.json'):
+                self.latest_result.to_json(filename, orient='records', lines=True)
+            elif filename.endswith('.xlsx'):
+                self.latest_result.to_excel(filename)
+            else:
+                self.eprint(HTML(f'<ansired>Unsupported saving format</ansired>'))
+                return None
+            self.eprint(HTML(f'<green>Result saved to {filename}</green>'))
+        else:
+            self.eprint(HTML(f'<yellow>Result not found. Run the query before save</yellow>'))
+            return None
+
+        return None
+
+    def special_t(self, args):
+        print('\n'.join(self.tables.keys()))
+        return None
+
+    def special_td(self, args):
+        print(self.get_tables_descr())
+        return None
+
     def run_query(self, query):
         query = query.strip()
         try:
             if query == '':
                 return None
 
-            if query.startswith('\\s'):
-                if self.latest_result is not None:
-                    filename = query.split(' ')[-1]
-                    if filename.endswith('.csv'):
-                        self.latest_result.to_csv(filename)
-                    elif filename.endswith('.json'):
-                        self.latest_result.to_json(filename, orient='records', lines=True)
-                    elif filename.endswith('.xlsx'):
-                        self.latest_result.to_excel(filename)
-                    else:
-                        self.eprint(HTML(f'<ansired>Unsupported saving format</ansired>'))
-                        return None
-                    self.eprint(HTML(f'<green>Result saved to {filename}</green>'))
-                else:
-                    self.eprint(HTML(f'<yellow>Result not found. Run the query before save</yellow>'))
-                    return None
-
-                return None
-
-            if query == '\\t':
-                print('\n'.join(self.tables.keys()))
-                return None
-
-            if query == '\\t+':
-                print(self.get_tables_descr())
-                return None
-
-            if query in ['\\?', '?', '\help', '/help', 'help']:
-                print("\\t   tables list\n"
-                      "\\t+  tables list with details\n")
+            if query[0] == '\\':
+                self.special(query[1:])
                 return None
 
             if query in self.tables:
@@ -180,7 +199,7 @@ class LocalSQL():
                 self.eprint(HTML(f'<ansired>{file} error: {e}</ansired>'))
 
         if not self.tables:
-            self.eeprint(HTML(f'<ansired>Supported files not found. Try --help</ansired>'))
+            self.eprint(HTML(f'<yellow>Supported files not found. Try -r, -d or --help</yellow>'))
 
         if args.query:
             result = self.run_query(args.query)
