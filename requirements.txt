@@ -2,3 +2,4 @@ pandas
 pandasql
 openpyxl
 prompt_toolkit
+pygments

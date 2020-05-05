@@ -8,6 +8,8 @@ from pandasql import sqldf
 from prompt_toolkit import PromptSession, print_formatted_text, HTML
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.lexers import PygmentsLexer
+from pygments.lexers.sql import SqlLexer
 
 __version__ = '0.1.3'
 
@@ -22,6 +24,7 @@ class LocalSQL():
         self.verbose = False
         self.silent = False
         self.latest_result = None
+        self.lexer = False
 
         pd.set_option('display.max_columns', 1000)
         pd.set_option('display.max_rows', 1000)
@@ -195,7 +198,8 @@ class LocalSQL():
                         completions.append(col)
 
             html_completer = WordCompleter(completions)
-            session = PromptSession(history=FileHistory(self.history_file))
+            lexer = PygmentsLexer(SqlLexer) if self.lexer else None
+            session = PromptSession(lexer=lexer, history=FileHistory(self.history_file))
             while 1:
                 try:
                     query = session.prompt(HTML('<white>lsql></white> '), completer=html_completer)
