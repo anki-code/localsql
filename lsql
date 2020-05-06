@@ -2,7 +2,7 @@
 
 import sys
 import os
-from localsql import LocalSQL
+from localsql.localsql import LocalSQL
 
 if __name__ == '__main__':
     try:
