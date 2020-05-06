@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 import argparse
@@ -217,7 +218,12 @@ class LocalSQL():
 
             html_completer = WordCompleter(completions)
             lexer = PygmentsLexer(SqlLexer) if self.lexer else None
-            session = PromptSession(lexer=lexer, history=FileHistory(self.history_file))
+
+            if self.history_file:
+                history = FileHistory(self.history_file) if os.access('.', os.W_OK) else None
+            else:
+                history = None
+            session = PromptSession(lexer=lexer, history=history)
             while 1:
                 try:
                     query = session.prompt(HTML('<white>lsql></white> '), completer=html_completer)
