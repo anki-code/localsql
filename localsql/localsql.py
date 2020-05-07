@@ -16,12 +16,18 @@ from localsql import __version__
 class LocalSQL():
     def __init__(self):
         self.extensions = ['csv', 'xlsx', 'json']
-        self.history_file = '.lsql_history'
+
+        history_path = Path.home() / '.local/share/localsql'
+        if not history_path.exists():
+            history_path.mkdir(parents=True, exist_ok=True)
+        self.history_file = history_path / 'lsql_history'
+
         self.tables = {}
         self.verbose = False
         self.silent = False
         self.latest_result = None
         self.lexer = False
+        self.mode = 'sql'
 
         pd.set_option('display.width', None)
         pd.set_option('display.max_columns', 1000)
@@ -87,11 +93,12 @@ class LocalSQL():
         function = 'special_' + function_name
 
         if not hasattr(self, function):
-            print(f'Unrecognized special command: {function_name}\n')
-            print(f'Commands:\n'
-                  f'  \\t   List of tables.\n'
-                  f'  \\td  Detailed list of tables.\n'
-                  f'  \\s   Save last not empty results to file.\n')
+            print(f'Unrecognized special command: {function_name}')
+            print(f'  \\t    List of tables.\n'
+                  f'  \\td   Detailed list of tables.\n'
+                  f'  \\s    Save last not empty results to file.\n'
+                  f'  \\py   Python commands mode\n'
+                  f'  \\sql  SQL commands mode\n')
             return None
 
         getattr(self, function)(query_args[1:])
@@ -128,7 +135,15 @@ class LocalSQL():
         print(self.get_tables_descr())
         return None
 
-    def run_query(self, query):
+    def special_py(self, args):
+        self.mode = 'py'
+        return None
+
+    def special_sql(self, args):
+        self.mode = 'sql'
+        return None
+
+    def run_sql(self, query):
         query = query.strip()
         try:
             if query == '':
@@ -157,6 +172,12 @@ class LocalSQL():
 
         return None
 
+    def run_py(self, command):
+        try:
+            exec(command)
+        except Exception as e:
+            self.eprint(HTML(f'<ansired>Error: {e}</ansired>'))
+        return None
 
     def main(self):
         argp = argparse.ArgumentParser(description="Querying local files using SQL.")
@@ -203,7 +224,7 @@ class LocalSQL():
             self.eprint(HTML(f'<yellow>Supported files not found. Try -r, -d or --help</yellow>'))
 
         if args.query:
-            result = self.run_query(args.query)
+            result = self.run_sql(args.query)
             if result is not None:
                 print(result)
         else:
@@ -227,9 +248,14 @@ class LocalSQL():
             session = PromptSession(lexer=lexer, history=history)
             while 1:
                 try:
-                    query = session.prompt(HTML('<white>lsql></white> '), completer=html_completer)
+                    query = session.prompt(HTML(f'<white><bold>{self.mode}></bold></white> '), completer=html_completer)
                 except KeyboardInterrupt:
                     continue
-                result = self.run_query(query)
-                if result is not None:
-                    print(result)
+
+                if self.mode == 'sql':
+                    result = self.run_sql(query)
+                    if result is not None:
+                        print(result)
+                elif self.mode == 'py':
+                    self.run_py(query)
+
