@@ -1,4 +1,7 @@
-LocalSQL is for querying local files using SQL.
+LocalSQL is for querying local files using SQL. 
+
+The `lsql` command without arguments finds csv, xlsx, json files in the current directory
+and loads them in memory to querying using SQL.
 
 ## Install
 ```bash
@@ -6,8 +9,6 @@ pip install git+https://github.com/localsql/localsql
 ```
 
 ## Usage
-The `lsql` command without arguments search supported files (csv, xlsx, json) in the current directory
-and loads them in memory to querying using SQL.
 
 ```
 $ lsql --help
