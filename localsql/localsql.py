@@ -23,6 +23,7 @@ class LocalSQL():
         self.latest_result = None
         self.lexer = False
 
+        pd.set_option('display.width', None)
         pd.set_option('display.max_columns', 1000)
         pd.set_option('display.max_rows', 1000)
         pd.set_option('precision', 4)
