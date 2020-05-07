@@ -174,6 +174,13 @@ class LocalSQL():
 
     def run_py(self, command):
         try:
+            if command == '':
+                return None
+
+            if command[0] == '\\':
+                self.special(command[1:])
+                return None
+
             exec(command)
         except Exception as e:
             self.eprint(HTML(f'<ansired>Error: {e}</ansired>'))
