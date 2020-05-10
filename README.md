@@ -68,7 +68,7 @@ lsql> SELECT * FROM excel_xlsx e LEFT JOIN one_json j ON e.id = j.id
 ```
 ### Not interactive
 ```bash
-$ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC NULLS LAST" -s                                                                                    
+$ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC NULLS LAST" -s
      c  cnt
 0  5.0    1
 1  NaN    2
@@ -77,7 +77,7 @@ $ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC 
 ### Transpose output
 To transpose the output add `/t` to the end of query:
 ```
-lsql> SELECT * FROM nested_json LIMIT 1 /t                                                                                                                                           
+lsql> SELECT * FROM nested_json LIMIT 1 /t
 id                1
 nest.a            1
 nest.b    [1, 2, 3]
@@ -89,8 +89,8 @@ Name: 0, dtype: object
 
 ### Python mode
 ```
-lsql> \lpy                                                                                                                                                                          
-lpy> print(self.tables['csv_csv'])                                                                                                                                                  
+lsql> \lpy
+lpy> print(self.tables['csv_csv'])
    id  b  c
 0   1  4  7
 1   2  5  8
