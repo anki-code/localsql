@@ -235,7 +235,10 @@ class LocalSQL():
                 self.special(command[1:])
                 return None
 
-            exec(command)
+            try:
+                return eval(command)
+            except:
+                exec(command)
         except Exception as e:
             self.eprint(HTML(f'<ansired>Error: {e}</ansired>'))
         return None
@@ -280,10 +283,10 @@ class LocalSQL():
             try:
                 df = self.df_from_file(file)
                 if df is not None:
-                    self.print(HTML(f'<orange>{file}: </orange>'), end='')
+                    self.eprint(HTML(f'<orange>{file}: </orange>'), end='')
                     table_name = self.tablename_from_file(file)
                     self.tables[table_name] = df
-                    self.print(HTML(f'<grey>table=</grey><yellow>{table_name}</yellow>, <grey>columns=</grey><lightgrey>{len(df.columns)}</lightgrey>, <grey>rows=</grey><lightgrey>{len(df)}</lightgrey>'))
+                    self.eprint(HTML(f'<grey>table=</grey><yellow>{table_name}</yellow>, <grey>columns=</grey><lightgrey>{len(df.columns)}</lightgrey>, <grey>rows=</grey><lightgrey>{len(df)}</lightgrey>'))
                 else:
                     continue
             except Exception as e:
@@ -336,4 +339,6 @@ class LocalSQL():
                         else:
                             print(result)
                 elif self.mode == 'lpy':
-                    self.run_py(query)
+                    result = self.run_py(query)
+                    if result is not None:
+                        print(result)
