@@ -9,7 +9,7 @@ pip install git+https://github.com/localsql/localsql
 
 ```
 $ lsql --help
-usage: lsql [-h] [-d DIRECTORY] [-r] [-q QUERY] [-v] [-s] [--version] [files [files ...]]
+usage: lsql [-h] [-d DIRECTORY] [-r] [-q QUERY] [-v] [-s] [-jn] [--version] [files [files ...]]
 
 Querying local files using SQL.
 
@@ -25,8 +25,9 @@ optional arguments:
                         Run SQL query and return result.
   -v, --verbose         Verbose mode.
   -s, --silent          Silent mode.
+  -jn, --json-normalize
+                        JSON normalize.
   --version, -V         show program's version number and exit
-
 ```
 
 ### SQL syntax
