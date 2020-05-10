@@ -1,8 +1,5 @@
 LocalSQL is for querying local files using SQL. 
 
-The `lsql` command without arguments finds `csv`, `xlsx`, `json` files in the current directory
-and loads them in memory to querying using SQL.
-
 ## Install
 ```bash
 pip install git+https://github.com/localsql/localsql
@@ -39,7 +36,7 @@ LocalSQL uses [SQLite syntax](http://www.sqlite.org/lang.html).
 To repeat the use cases get the repository:
 ```bash
 $ cd ~ && git clone --depth 1 https://github.com/localsql/localsql && cd localsql
-$ lsql -r
+$ lsql -d examples
 examples/one.json: table=one_json, columns=4, rows=3
 examples/lines.json: table=lines_json, columns=3, rows=3
 examples/nested.json: table=nested_json, columns=5, rows=3
@@ -68,7 +65,7 @@ lsql> SELECT * FROM excel_xlsx e LEFT JOIN one_json j ON e.id = j.id
 ```
 ### Not interactive
 ```bash
-$ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC NULLS LAST" -s
+$ lsql -d examples -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC NULLS LAST" -s
      c  cnt
 0  5.0    1
 1  NaN    2
