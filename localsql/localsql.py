@@ -1,9 +1,13 @@
+from localsql import __version__
+
 import os
 import sys
 import re
 import argparse
 import pandas as pd
+import json
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
 from pandasql import sqldf
 from prompt_toolkit import PromptSession, print_formatted_text, HTML
@@ -11,7 +15,6 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.sql import SqlLexer
-from localsql import __version__
 
 class LocalSQL():
     def __init__(self):
@@ -28,6 +31,9 @@ class LocalSQL():
         self.latest_result = None
         self.lexer = False
         self.mode = 'sql'
+
+        self.re_quotated_column = re.compile(r'.*[ -.,\{\}\[\]\(\)<>?/\\\'!@#$%^&*:;`~ ].*')
+        self.re_file_to_tablename = re.compile(r'[:*?\-<>|"\'.{}\[\]\(\) ]')
 
         pd.set_option('display.width', None)
         pd.set_option('display.max_columns', 1000)
@@ -58,6 +64,12 @@ class LocalSQL():
         print_formatted_text(*args, file=sys.stderr, **kwargs)
         exit(return_code)
 
+    def df_iterable_to_str(self, df):
+        for c, t in df.dtypes.iteritems():
+            if t == 'object':
+                df[c] = df[c].apply(lambda v: str(v) if isinstance(v, Iterable) else v)
+        return df
+
     def df_from_file(self, file):
         fstr = str(file)
 
@@ -73,7 +85,15 @@ class LocalSQL():
             try:
                 return pd.read_json(file)
             except:
-                return pd.read_json(file, lines=True)
+                result_df = pd.DataFrame()
+                with open(file, 'r') as f:
+                    for line in f:
+                        j = json.loads(line)
+                        json_df = pd.json_normalize(j)
+                        result_df = pd.concat([result_df, json_df])
+                self.df_iterable_to_str(result_df)
+                return result_df
+                # return pd.read_json(file, lines=True)
         elif fstr.endswith('.xlsx'):
             return pd.read_excel(file, engine="openpyxl")
 
@@ -81,8 +101,8 @@ class LocalSQL():
 
     def tablename_from_file(self, file):
         file_name = file.name
-        table_name = re.sub('[:*?\-<>|"\'.{}\[\]\(\) ]', '_', file_name)
-        table_name = re.sub('[_]+', '_', table_name)
+        table_name = self.re_file_to_tablename.sub('_', file_name)
+        table_name = re.sub(r'[_]+', '_', table_name)
         if table_name[0].isdigit():
             table_name = 't' + table_name
         return table_name
@@ -154,7 +174,7 @@ class LocalSQL():
                 return None
 
             if query in self.tables:
-                print(self.tables[query])
+                self.tables[query].info()
                 return None
 
             result = sqldf(query, self.tables)
@@ -201,7 +221,7 @@ class LocalSQL():
         self.silent = args.silent
 
         if not self.silent:
-            self.eprint(f'LocalSQL {__version__}')
+            self.eprint(HTML(f'LocalSQL {__version__}'))
 
         if self.verbose:
             warnings.filters('ignore')
@@ -221,7 +241,7 @@ class LocalSQL():
                     self.print(HTML(f'<orange>{file}: </orange>'), end='')
                     table_name = self.tablename_from_file(file)
                     self.tables[table_name] = df
-                    self.print(HTML(f'<yellow>{table_name}</yellow>'))
+                    self.print(HTML(f'<grey>table=</grey><yellow>{table_name}</yellow>, <grey>columns=</grey><lightgrey>{len(df.columns)}</lightgrey>, <grey>rows=</grey><lightgrey>{len(df)}</lightgrey>'))
                 else:
                     continue
             except Exception as e:
@@ -240,7 +260,7 @@ class LocalSQL():
             for n, d in self.tables.items():
                 for c in d.columns:
                     col = c
-                    if ' ' in col:
+                    if self.re_quotated_column.match(col):
                         col = f'"{col}"'
                     if col not in completions:
                         completions.append(col)
@@ -256,13 +276,22 @@ class LocalSQL():
             while 1:
                 try:
                     query = session.prompt(HTML(f'<white><bold>{self.mode}></bold></white> '), completer=html_completer)
+                    query = query.strip()
                 except KeyboardInterrupt:
                     continue
 
                 if self.mode == 'sql':
+                    transpose_rows = False
+                    if query[-2:] == '/t':
+                        query = query[:-2]
+                        transpose_rows = True
+
                     result = self.run_sql(query)
                     if result is not None:
-                        print(result)
+                        if transpose_rows:
+                            for i, r in result.iterrows():
+                                print(r, end='\n\n')
+                        else:
+                            print(result)
                 elif self.mode == 'py':
                     self.run_py(query)
-
