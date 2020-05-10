@@ -30,7 +30,7 @@ class LocalSQL():
         self.silent = False
         self.latest_result = None
         self.lexer = False
-        self.mode = 'sql'
+        self.mode = 'lsql'
 
         self.re_quotated_column = re.compile(r'.*[ -.,\{\}\[\]\(\)<>?/\\\'!@#$%^&*:;`~ ].*')
         self.re_file_to_tablename = re.compile(r'[:*?\-<>|"\'.{}\[\]\(\) ]')
@@ -114,11 +114,11 @@ class LocalSQL():
 
         if not hasattr(self, function):
             print(f'Unrecognized special command: {function_name}')
-            print(f'  \\t    List of tables.\n'
-                  f'  \\td   Detailed list of tables.\n'
-                  f'  \\s    Save last not empty results to file.\n'
-                  f'  \\py   Python commands mode\n'
-                  f'  \\sql  SQL commands mode\n')
+            print(f'  \\t     List of tables.\n'
+                  f'  \\td    Detailed list of tables.\n'
+                  f'  \\s     Save last not empty results to file.\n'
+                  f'  \\lpy   Python commands mode\n'
+                  f'  \\lsql  SQL commands mode\n')
             return None
 
         getattr(self, function)(query_args[1:])
@@ -155,15 +155,15 @@ class LocalSQL():
         print(self.get_tables_descr())
         return None
 
-    def special_py(self, args):
-        self.mode = 'py'
+    def special_lpy(self, args):
+        self.mode = 'lpy'
         return None
 
-    def special_sql(self, args):
-        self.mode = 'sql'
+    def special_lsql(self, args):
+        self.mode = 'lsql'
         return None
 
-    def run_sql(self, query):
+    def run_lsql(self, query):
         query = query.strip()
         try:
             if query == '':
@@ -251,7 +251,7 @@ class LocalSQL():
             self.eprint(HTML(f'<yellow>Supported files not found. Try -r, -d or --help</yellow>'))
 
         if args.query:
-            result = self.run_sql(args.query)
+            result = self.run_lsql(args.query)
             if result is not None:
                 print(result)
         else:
@@ -280,18 +280,18 @@ class LocalSQL():
                 except KeyboardInterrupt:
                     continue
 
-                if self.mode == 'sql':
+                if self.mode == 'lsql':
                     transpose_rows = False
                     if query[-2:] == '/t':
                         query = query[:-2]
                         transpose_rows = True
 
-                    result = self.run_sql(query)
+                    result = self.run_lsql(query)
                     if result is not None:
                         if transpose_rows:
                             for i, r in result.iterrows():
                                 print(r, end='\n\n')
                         else:
                             print(result)
-                elif self.mode == 'py':
+                elif self.mode == 'lpy':
                     self.run_py(query)

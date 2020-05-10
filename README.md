@@ -1,6 +1,6 @@
 LocalSQL is for querying local files using SQL. 
 
-The `lsql` command without arguments finds csv, xlsx, json files in the current directory
+The `lsql` command without arguments finds `csv`, `xlsx`, `json` files in the current directory
 and loads them in memory to querying using SQL.
 
 ## Install
@@ -32,16 +32,24 @@ optional arguments:
 
 ```
 
-## Example
+### SQL syntax
+LocalSQL uses [SQLite syntax](http://www.sqlite.org/lang.html).
+
+## Use cases
+To repeat the use cases get the repository:
+```bash
+$ cd ~ && git clone --depth 1 https://github.com/localsql/localsql && cd localsql
+$ lsql -r
+examples/one.json: table=one_json, columns=4, rows=3
+examples/lines.json: table=lines_json, columns=3, rows=3
+examples/nested.json: table=nested_json, columns=5, rows=3
+examples/excel.xlsx: table=excel_xlsx, columns=3, rows=5
+examples/csv.csv: table=csv_csv, columns=3, rows=3
+lsql>
+```
+
 ### Interactive
 ```bash
-$ cd ~ && git clone https://github.com/localsql/localsql && cd localsql 
-$ lsql -r
-examples/one.json: one_json
-examples/lines.json: lines_json
-examples/excel.xlsx: excel_xlsx
-examples/csv.csv: csv_csv
-
 lsql> select * from excel_xlsx
    id   b   c
 0   1   6  11
@@ -64,8 +72,27 @@ $ lsql -r -q "SELECT c, count(*) as cnt FROM one_json GROUP BY c ORDER BY 1 ASC 
      c  cnt
 0  5.0    1
 1  NaN    2
+```
+
+### Transpose output
+To transpose the output add `/t` to the end of query:
+```
+lsql> SELECT * FROM nested_json LIMIT 1 /t                                                                                                                                           
+id                1
+nest.a            1
+nest.b    [1, 2, 3]
+nest           None
+c              None
+Name: 0, dtype: object
 
 ```
 
-## SQL syntax
-LocalSQL uses [pandasql](https://github.com/yhat/pandasql) library with [SQLite syntax](http://www.sqlite.org/lang.html).
+### Python mode
+```
+lsql> \lpy                                                                                                                                                                          
+lpy> print(self.tables['csv_csv'])                                                                                                                                                  
+   id  b  c
+0   1  4  7
+1   2  5  8
+2   3  6  9
+```
