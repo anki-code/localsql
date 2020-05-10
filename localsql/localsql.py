@@ -266,11 +266,15 @@ class LocalSQL():
         if args.files:
             files = [Path(f) for f in args.files]
         else:
-            glob = '**/*.*' if args.recursive else '*.*'
+            path = None
             if args.directory:
                 path = args.directory
-                cdir = Path(path)
-                files = cdir.glob(glob)
+            elif args.recursive:
+                path = '.'
+
+            if path:
+                glob = '**/*.*' if args.recursive else '*.*'
+                files = Path(path).glob(glob)
 
         for file in files:
             try:
