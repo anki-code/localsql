@@ -7,6 +7,7 @@ import argparse
 import pandas as pd
 import json
 import warnings
+import gzip
 from collections.abc import Iterable
 from pathlib import Path
 from pandasql import sqldf
@@ -31,6 +32,7 @@ class LocalSQL():
         self.latest_result = None
         self.lexer = False
         self.mode = 'lsql'
+        self.json_normalize = False
 
         self.re_quotated_column = re.compile(r'.*[ -.,\{\}\[\]\(\)<>?/\\\'!@#$%^&*:;`~ ].*')
         self.re_file_to_tablename = re.compile(r'[:*?\-<>|"\'.{}\[\]\(\) ]')
@@ -72,31 +74,63 @@ class LocalSQL():
 
     def df_from_file(self, file):
         fstr = str(file)
+        fparts = fstr.split('.')
+        ext1 = fparts[-1]
+        ext2 = fparts[-2]
 
-        # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
-        for compressor in ['.gz', '.bz2', '.zip', '.xz']:
-            if fstr.endswith(compressor):
-                fstr = fstr[:-len(compressor)]
-                break
+        compressors = ['gz', 'bz2', 'zip', 'xz']
 
-        if fstr.endswith('.csv'):
+        format = None
+        compressor = None
+        if ext1 in self.extensions:
+            format = ext1
+        elif ext2 in self.extensions and ext1 in compressors:
+            format = ext2
+            compressor = ext1
+
+        if not format:
+            return None
+
+        if format == 'csv':
             return pd.read_csv(file)
-        elif fstr.endswith('.json'):
-            try:
-                return pd.read_json(file)
-            except:
-                result_df = pd.DataFrame()
-                with open(file, 'r') as f:
-                    for line in f:
-                        j = json.loads(line)
-                        json_df = pd.json_normalize(j)
-                        result_df = pd.concat([result_df, json_df])
-                self.df_iterable_to_str(result_df)
-                return result_df
-                # return pd.read_json(file, lines=True)
-        elif fstr.endswith('.xlsx'):
+        elif format == 'xlsx':
             return pd.read_excel(file, engine="openpyxl")
+        elif format == 'json':
+            if not self.json_normalize:
+                try:
+                    return self.df_iterable_to_str(pd.read_json(file))
+                except:
+                    return self.df_iterable_to_str(pd.read_json(file, lines=True))
+            else:
+                json_supported_compressors = ['gz']
+                if compressor is not None and compressor not in json_supported_compressors:
+                    self.eprint(f'Compressor {compressor} is not supported for json normalize mode.')
+                    return None
 
+                if compressor == 'gz':
+                    fopen = gzip.open(file, 'rt')
+                else:
+                    fopen = open(file, 'r')
+
+                try:
+                    result_df = pd.DataFrame()
+                    with fopen as f:
+                        l = 0
+                        for line in f:
+                            j = json.loads(line)
+                            json_df = pd.json_normalize(j)
+                            result_df = pd.concat([result_df, json_df])
+                            l += 1
+                    return self.df_iterable_to_str(result_df)
+                except:
+                    if l == 0:
+                        if compressor == 'gz':
+                            fopen = gzip.open(file, 'rt')
+                        else:
+                            fopen = open(file, 'r')
+
+                        with fopen as f:
+                            return self.df_iterable_to_str(pd.read_json(f))
         return None
 
     def tablename_from_file(self, file):
@@ -214,11 +248,13 @@ class LocalSQL():
         argp.add_argument('-q', '--query', help="Run SQL query and return result.")
         argp.add_argument('-v', '--verbose', default=self.verbose, action='store_true', help="Verbose mode.")
         argp.add_argument('-s', '--silent', default=self.silent, action='store_true', help="Silent mode.")
+        argp.add_argument('-jn', '--json-normalize', default=self.json_normalize, action='store_true', help="JSON normalize.")
         argp.add_argument('--version', '-V', action='version', version=f"LocalSQL/{__version__}")
         args = argp.parse_args()
 
         self.verbose = args.verbose
         self.silent = args.silent
+        self.json_normalize = args.json_normalize
 
         if not self.silent:
             self.eprint(HTML(f'LocalSQL {__version__}'))
