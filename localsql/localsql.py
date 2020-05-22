@@ -9,6 +9,7 @@ import json
 import warnings
 import gzip
 from collections.abc import Iterable
+from io import TextIOWrapper
 from pathlib import Path
 from pandasql import sqldf
 from prompt_toolkit import PromptSession, print_formatted_text, HTML
@@ -72,24 +73,29 @@ class LocalSQL():
                 df[c] = df[c].apply(lambda v: str(v) if isinstance(v, Iterable) else v)
         return df
 
-    def df_from_file(self, file):
-        fstr = str(file)
-        fparts = fstr.split('.')
-        ext1 = fparts[-1]
-        ext2 = fparts[-2]
-
-        compressors = ['gz', 'bz2', 'zip', 'xz']
-
-        format = None
+    def df_from_file(self, file, format=None):
+        is_stream = False
         compressor = None
-        if ext1 in self.extensions:
-            format = ext1
-        elif ext2 in self.extensions and ext1 in compressors:
-            format = ext2
-            compressor = ext1
+        if isinstance(file, TextIOWrapper):
+            is_stream = True
+            if not format:
+                self.eprint('Format for IO stream is not found.')
+        else:
+            fstr = str(file)
+            fparts = fstr.split('.')
+            ext1 = fparts[-1]
+            ext2 = fparts[-2]
 
-        if not format:
-            return None
+            compressors = ['gz', 'bz2', 'zip', 'xz']
+
+            if ext1 in self.extensions:
+                format = ext1
+            elif ext2 in self.extensions and ext1 in compressors:
+                format = ext2
+                compressor = ext1
+
+            if not format:
+                return None
 
         if format == 'csv':
             return pd.read_csv(file)
@@ -98,19 +104,22 @@ class LocalSQL():
         elif format == 'json':
             if not self.json_normalize:
                 try:
-                    return self.df_iterable_to_str(pd.read_json(file))
-                except:
                     return self.df_iterable_to_str(pd.read_json(file, lines=True))
+                except:
+                    return self.df_iterable_to_str(pd.read_json(file))
             else:
                 json_supported_compressors = ['gz']
                 if compressor is not None and compressor not in json_supported_compressors:
                     self.eprint(f'Compressor {compressor} is not supported for json normalize mode.')
                     return None
 
-                if compressor == 'gz':
-                    fopen = gzip.open(file, 'rt')
+                if is_stream:
+                    fopen = file
                 else:
-                    fopen = open(file, 'r')
+                    if compressor == 'gz':
+                        fopen = gzip.open(file, 'rt')
+                    else:
+                        fopen = open(file, 'r')
 
                 try:
                     result_df = pd.DataFrame()
@@ -258,9 +267,6 @@ class LocalSQL():
         self.verbose = args.verbose
         self.silent = args.silent
         self.json_normalize = args.json_normalize
-
-        if not self.silent:
-            self.eprint(HTML(f'LocalSQL {__version__}'))
 
         if self.verbose:
             warnings.filters('ignore')
