@@ -3,3 +3,4 @@ pandasql
 openpyxl
 prompt_toolkit
 pygments
+tableprint

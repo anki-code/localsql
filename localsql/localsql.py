@@ -4,10 +4,11 @@ import os
 import sys
 import re
 import argparse
-import pandas as pd
-import json
 import warnings
+import json
 import gzip
+import pandas as pd
+import tableprint as tp
 from collections.abc import Iterable
 from io import TextIOWrapper
 from pathlib import Path
@@ -34,6 +35,7 @@ class LocalSQL():
         self.lexer = False
         self.mode = 'lsql'
         self.json_normalize = False
+        self.pretty_print = False
 
         self.re_quotated_column = re.compile(r'.*[ -.,\{\}\[\]\(\)<>?/\\\'!@#$%^&*:;`~ ].*')
         self.re_file_to_tablename = re.compile(r'[:*?\-<>|"\'.{}\[\]\(\) ]')
@@ -198,6 +200,11 @@ class LocalSQL():
         print(self.get_tables_descr())
         return None
 
+    def special_pp(self, args):
+        self.pretty_print = not self.pretty_print
+        print('Pretty print ' + ['OFF', 'ON'][int(self.pretty_print)])
+        return None
+
     def special_lpy(self, args):
         self.mode = 'lpy'
         return None
@@ -252,6 +259,12 @@ class LocalSQL():
             self.eprint(HTML(f'<ansired>Error: {e}</ansired>'))
         return None
 
+    def print_result(self, result):
+        if self.pretty_print:
+            tp.dataframe(result)
+        else:
+            print(result)
+
     def main(self):
         argp = argparse.ArgumentParser(description="Querying local files using SQL.")
         argp.add_argument('files', nargs='*', help=f"Files with tables: {', '.join(self.extensions)}.")
@@ -304,7 +317,7 @@ class LocalSQL():
         if args.query:
             result = self.run_lsql(args.query)
             if result is not None:
-                print(result)
+                self.print_result(result)
         else:
             table_names = list(self.tables.keys())
             completions = table_names
@@ -343,8 +356,8 @@ class LocalSQL():
                             for i, r in result.iterrows():
                                 print(r, end='\n\n')
                         else:
-                            print(result)
+                            self.print_result(result)
                 elif self.mode == 'lpy':
                     result = self.run_py(query)
                     if result is not None:
-                        print(result)
+                        self.print_result(result)

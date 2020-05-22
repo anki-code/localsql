@@ -94,3 +94,18 @@ lpy> print(self.tables['csv_csv'])
 1   2  5  8
 2   3  6  9
 ```
+
+### Pretty print
+
+```
+lsql> \pp
+Pretty print ON
+lsql> select * from one_json
+╭─────┬─────┬─────┬─────╮
+│  id │   b │   c │   d │
+├─────┼─────┼─────┼─────┤
+│   1 │   4 │ nan │ nan │
+│   2 │ nan │   5 │ nan │
+│   3 │ nan │ nan │   6 │
+╰─────┴─────┴─────┴─────╯
+```
