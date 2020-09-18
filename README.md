@@ -2,6 +2,10 @@
 <b>LocalSQL</b> is for querying local csv, xlsx, json files using SQL. 
 </p>
 
+<p align="center">  
+If you like the idea of pipeliner click ⭐ on the repo and stay tuned.
+</p>
+
 ## Install
 ```bash
 pip install git+https://github.com/localsql/localsql
