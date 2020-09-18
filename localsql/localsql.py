@@ -3,7 +3,7 @@ from localsql import __version__
 import os
 import sys
 import re
-import argparse
+import argparse, argcomplete
 import warnings
 import json
 import gzip
@@ -275,6 +275,7 @@ class LocalSQL():
         argp.add_argument('-s', '--silent', default=self.silent, action='store_true', help="Silent mode.")
         argp.add_argument('-jn', '--json-normalize', default=self.json_normalize, action='store_true', help="JSON normalize.")
         argp.add_argument('--version', '-V', action='version', version=f"LocalSQL/{__version__}")
+        argcomplete.autocomplete(argp)
         args = argp.parse_args()
 
         self.verbose = args.verbose
