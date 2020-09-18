@@ -19,7 +19,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires='>=3.6',
-    install_requires=['pandas', 'pandasql', 'openpyxl', 'prompt_toolkit', 'pygments', 'tableprint'],
+    install_requires=['pandas', 'pandasql', 'openpyxl', 'prompt_toolkit', 'pygments', 'tableprint', 'argcomplete'],
     scripts=['localsql'],
     packages=setuptools.find_packages(),
     package_data={'localsql': ['*.py']},
