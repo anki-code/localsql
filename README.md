@@ -1,4 +1,6 @@
-LocalSQL is for querying local files using SQL. 
+<p align="center">
+<b>LocalSQL</b> is for querying local csv, xlsx, json files using SQL. 
+</p>
 
 ## Install
 ```bash
