@@ -38,7 +38,7 @@ class LocalSQL():
         self.pretty_print = False
 
         self.re_quotated_column = re.compile(r'.*[ -.,\{\}\[\]\(\)<>?/\\\'!@#$%^&*:;`~ ].*')
-        self.re_file_to_tablename = re.compile(r'[:*?\-<>|"\'.{}\[\]\(\) ]')
+        self.re_file_to_tablename = re.compile(r'[:*?\-<=>|"\'.{}\[\]\(\) ]')
 
         pd.set_option('display.width', None)
         pd.set_option('display.max_columns', 1000)
