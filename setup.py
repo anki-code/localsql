@@ -26,9 +26,9 @@ setuptools.setup(
     platforms='any',
     url='https://github.com/localsql/localsql',
     project_urls={
-        "Documentation": "https://github.com/localsql/localsql/blob/master/README.md",
-        "Code": "https://github.com/localsql/localsql",
-        "Issue tracker": "https://github.com/localsql/localsql/issues",
+        "Documentation": "https://github.com/anki-code/localsql/blob/master/README.md",
+        "Code": "https://github.com/anki-code/localsql",
+        "Issue tracker": "https://github.com/anki-code/localsql/issues",
     },
     classifiers=[
         "License :: OSI Approved :: BSD License"
