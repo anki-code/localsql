@@ -13,7 +13,7 @@ pip install git+https://github.com/anki-code/localsql
 
 ## Usage
 
-```
+```xsh
 lsql --help
 # usage: lsql [-h] [-d DIRECTORY] [-r] [-q QUERY] [-v] [-s] [-jn] [--version] [files [files ...]]
 #
@@ -41,7 +41,7 @@ LocalSQL uses [SQLite syntax](http://www.sqlite.org/lang.html).
 
 ## Use cases
 To repeat the use cases get the repository:
-```bash
+```xsh
 cd ~ && git clone --depth 1 https://github.com/localsql/localsql && cd localsql
 lsql -d examples
 # examples/one.json: table=one_json, columns=4, rows=3
