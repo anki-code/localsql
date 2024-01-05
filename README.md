@@ -114,3 +114,9 @@ select * from one_json
 # │   3 │ nan │ nan │   6 │
 # ╰─────┴─────┴─────┴─────╯
 ```
+
+## Known issues
+
+### Error: Not an executable object
+
+Downgrade `sqlalchemy` package i.e. `pip install 'sqlalchemy<2'`.
